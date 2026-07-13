@@ -6,7 +6,6 @@ import ToBeMemorizedLibrary from '../views/ToBeMemorizedLibrary.vue'
 import ErrorLibrary from '../views/ErrorLibrary.vue'
 import HardWordLibrary from '../views/HardWordLibrary.vue'
 import Profile from '../views/Profile.vue'
-import Admin from '../views/Admin.vue'
 import Honors from '../views/Honors.vue'
 
 const routes = [
@@ -18,7 +17,6 @@ const routes = [
   { path: '/errors', component: ErrorLibrary },
   { path: '/hard', component: HardWordLibrary },
   { path: '/profile', component: Profile },
-  { path: '/admin', component: Admin },
   { path: '/honors', component: Honors }
 ]
 

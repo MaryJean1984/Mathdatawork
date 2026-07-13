@@ -43,7 +43,30 @@
           </el-button>
         </div>
 
+        <!-- 导航按钮 -->
+        <div class="nav-buttons">
+          <el-button type="info" plain @click="prevQuestion" :disabled="currentIndex <= 0" class="nav-btn glass-btn">
+            <el-icon><ArrowLeft /></el-icon> 上一个 (PREV)
+          </el-button>
+          <el-button type="primary" plain @click="nextQuestion" class="nav-btn glass-btn">
+            下一个 (NEXT) <el-icon><ArrowRight /></el-icon>
+          </el-button>
+        </div>
+
       </div>
+
+      <!-- 底部计数器 -->
+      <div class="counter-footer">
+        <div class="counter-item correct-counter">
+          <span class="label">选择正确</span>
+          <span class="value neon-text-success">{{ correctCount }}</span>
+        </div>
+        <div class="counter-item incorrect-counter">
+          <span class="label">选择错误</span>
+          <span class="value neon-text-danger">{{ incorrectCount }}</span>
+        </div>
+      </div>
+
     </el-card>
   </div>
 </template>
@@ -51,6 +74,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 
 // 【核心改造】动态生成 30,000+ 级别的海量模拟词库
 const generateMassiveDictionary = () => {
@@ -96,13 +120,29 @@ const generateMassiveDictionary = () => {
 const dictionary = generateMassiveDictionary()
 
 const currentLevel = ref('beginner')
-const currentQuestion = ref(null)
-const options = ref([])
-const hasAnswered = ref(false)
-const selectedWord = ref(null)
+
+// 历史记录与导航状态
+const questionHistory = ref([])
+const currentIndex = ref(-1)
+
+// 计数器状态
+const correctCount = ref(0)
+const incorrectCount = ref(0)
 
 // 动态获取当前选定等级的词库
 const currentWordList = computed(() => dictionary[currentLevel.value])
+
+// 获取当前题目的数据
+const currentQuestionData = computed(() => {
+  if (currentIndex.value >= 0 && currentIndex.value < questionHistory.value.length) {
+    return questionHistory.value[currentIndex.value]
+  }
+  return null
+})
+
+const currentQuestion = computed(() => currentQuestionData.value?.question)
+const options = computed(() => currentQuestionData.value?.options || [])
+const hasAnswered = computed(() => currentQuestionData.value?.hasAnswered || false)
 
 // 动态主题类名
 const themeClass = computed(() => `theme-${currentLevel.value}`)
@@ -114,7 +154,9 @@ const getWordCount = (level) => {
 
 const handleLevelChange = () => {
   ElMessage.success(`System Override: Switched to [${currentLevel.value.toUpperCase()}] Protocol`)
-  loadQuestion()
+  questionHistory.value = []
+  currentIndex.value = -1
+  loadNewQuestion()
 }
 
 const getRandomWords = (count, exclude) => {
@@ -123,40 +165,68 @@ const getRandomWords = (count, exclude) => {
   return shuffled.slice(0, count)
 }
 
-const loadQuestion = () => {
-  hasAnswered.value = false
-  selectedWord.value = null
+const loadNewQuestion = () => {
   const randomTarget = currentWordList.value[Math.floor(Math.random() * currentWordList.value.length)]
-  currentQuestion.value = randomTarget
   
   // 难度越大，干扰项越多
   const distractorCount = currentLevel.value === 'beginner' ? 3 : currentLevel.value === 'proficient' ? 5 : 7;
   const distractors = getRandomWords(distractorCount, randomTarget.word)
   const allOpts = [...distractors, randomTarget.word]
-  options.value = allOpts.sort(() => 0.5 - Math.random())
+  
+  questionHistory.value.push({
+    question: randomTarget,
+    options: allOpts.sort(() => 0.5 - Math.random()),
+    selectedWord: null,
+    hasAnswered: false
+  })
+  currentIndex.value = questionHistory.value.length - 1
+}
+
+const nextQuestion = () => {
+  if (currentIndex.value < questionHistory.value.length - 1) {
+    currentIndex.value++
+  } else {
+    loadNewQuestion()
+  }
+}
+
+const prevQuestion = () => {
+  if (currentIndex.value > 0) {
+    currentIndex.value--
+  }
 }
 
 const getOptionType = (opt) => {
-  if (!hasAnswered.value) return 'primary'
-  if (opt === currentQuestion.value.word) return 'success'
-  if (opt === selectedWord.value && opt !== currentQuestion.value.word) return 'danger'
+  const current = currentQuestionData.value
+  if (!current || !current.hasAnswered) return 'primary'
+  if (opt === current.question.word) return 'success'
+  if (opt === current.selectedWord && opt !== current.question.word) return 'danger'
   return 'primary'
 }
 
+let autoNextTimer = null
 const selectOption = (opt) => {
-  if (hasAnswered.value) return
-  hasAnswered.value = true
-  selectedWord.value = opt
+  const current = currentQuestionData.value
+  if (!current || current.hasAnswered) return
+  
+  current.hasAnswered = true
+  current.selectedWord = opt
 
-  if (opt === currentQuestion.value.word) {
+  if (opt === current.question.word) {
+    correctCount.value++
     ElMessage.success('CORRECT MATCH')
   } else {
-    ElMessage.error(`ERROR! Target: ${currentQuestion.value.word}`)
-    recordError(currentQuestion.value)
+    incorrectCount.value++
+    ElMessage.error(`ERROR! Target: ${current.question.word}`)
+    recordError(current.question)
   }
 
-  setTimeout(() => {
-    loadQuestion()
+  clearTimeout(autoNextTimer)
+  autoNextTimer = setTimeout(() => {
+    // 如果用户没有手动切换题目，则自动跳到下一题
+    if (currentIndex.value === questionHistory.value.length - 1) {
+      nextQuestion()
+    }
   }, 1500)
 }
 
@@ -184,7 +254,7 @@ const recordError = (wordObj) => {
 }
 
 onMounted(() => {
-  loadQuestion()
+  loadNewQuestion()
 })
 </script>
 
@@ -193,7 +263,8 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100%;
+  min-height: calc(100vh - 80px);
+  padding: 20px;
   transition: all 0.5s ease;
 }
 .practice-card {
@@ -202,6 +273,8 @@ onMounted(() => {
   text-align: center;
   padding: 20px;
   transition: all 0.5s ease;
+  display: flex;
+  flex-direction: column;
 }
 .card-header {
   margin-bottom: 20px;
@@ -232,6 +305,72 @@ onMounted(() => {
   border-color: var(--neon-cyan);
   color: #fff;
   box-shadow: -1px 0 0 0 var(--neon-cyan);
+}
+
+/* 导航按钮样式 */
+.nav-buttons {
+  margin-top: 40px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+.glass-btn {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text-primary) !important;
+  font-weight: bold;
+  letter-spacing: 1px;
+  border-radius: 12px !important;
+  padding: 12px 24px !important;
+  transition: all 0.3s ease;
+}
+.glass-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 243, 255, 0.2);
+}
+.glass-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 底部计数器样式 */
+.counter-footer {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--glass-border);
+}
+.counter-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px 30px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  min-width: 120px;
+}
+.counter-item .label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 5px;
+  letter-spacing: 1px;
+}
+.counter-item .value {
+  font-size: 2rem;
+  font-weight: 900;
+}
+.neon-text-success {
+  color: #00ff80;
+  text-shadow: 0 0 10px rgba(0, 255, 128, 0.5);
+}
+.neon-text-danger {
+  color: #ff0055;
+  text-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
 }
 
 /* ========== 核心变装：入门等级 (Beginner) ========== */

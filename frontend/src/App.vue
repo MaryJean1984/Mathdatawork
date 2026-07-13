@@ -14,7 +14,6 @@
         <el-menu-item index="/hard">难度词汇库</el-menu-item>
         <el-menu-item index="/honors">个人荣誉</el-menu-item>
         <el-menu-item index="/profile">个人资料</el-menu-item>
-        <el-menu-item index="/admin">用户管理</el-menu-item>
         <div style="flex-grow: 1;"></div>
         <el-menu-item @click="logout" class="logout-btn">退出登录</el-menu-item>
       </el-menu>
@@ -69,17 +68,19 @@ const logout = () => {
 }
 
 .brand {
-  font-size: 1.5rem;
-  font-weight: 800;
-  margin-right: 30px;
-  letter-spacing: 2px;
+  font-size: 2.2rem;
+  font-weight: 900;
+  margin-right: 40px;
+  letter-spacing: 3px;
 }
 
 .el-menu--horizontal > .el-menu-item {
   color: var(--text-secondary) !important;
-  font-weight: 500;
+  font-weight: 600;
+  font-size: 1.25rem;
   border-bottom: 2px solid transparent;
   transition: all 0.3s ease;
+  padding: 0 25px;
 }
 
 .el-menu--horizontal > .el-menu-item:hover,
