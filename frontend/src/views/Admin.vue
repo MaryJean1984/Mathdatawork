@@ -1,18 +1,33 @@
 <template>
-  <div class="admin-container">
-    <h2>用户管理面板</h2>
-    <el-table :data="tableData" style="width: 100%" border>
-      <el-table-column prop="id" label="ID" width="80" />
-      <el-table-column prop="username" label="用户名" width="180" />
-      <el-table-column prop="email" label="邮箱" />
-      <el-table-column prop="role" label="角色" width="120" />
-      <el-table-column label="操作" width="200">
-        <template #default="scope">
-          <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
-          <el-button size="small" type="danger" @click="handleDelete(scope.$index, scope.row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+  <div class="admin-container fluid-container">
+    <el-card class="glass-card">
+      <template #header>
+        <div class="card-header">
+          <span class="neon-text title">ADMIN DASHBOARD</span>
+          <el-button type="primary" class="glow-btn" size="small">ADD USER</el-button>
+        </div>
+      </template>
+      <el-table :data="tableData" style="width: 100%" class="glass-table">
+        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="username" label="用户名" width="180">
+          <template #default="scope">
+            <span class="neon-text">{{ scope.row.username }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="email" label="邮箱" />
+        <el-table-column prop="role" label="角色" width="120">
+          <template #default="scope">
+            <el-tag :type="scope.row.role === 'admin' ? 'danger' : 'success'" effect="dark">{{ scope.row.role }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="200">
+          <template #default="scope">
+            <el-button size="small" @click="handleEdit(scope.$index, scope.row)">编辑</el-button>
+            <el-button size="small" type="danger" plain @click="handleDelete(scope.$index, scope.row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
   </div>
 </template>
 
@@ -57,5 +72,21 @@ const handleDelete = (index, row) => {
 <style scoped>
 .admin-container {
   padding: 20px;
+}
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+.glass-table {
+  background: transparent !important;
+}
+.glow-btn {
+  letter-spacing: 1px;
 }
 </style>

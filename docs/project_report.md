@@ -1,11 +1,19 @@
 # 《智能多语种单词记忆背诵平台》项目报告 —— 数据库设计核心章节
 
+本项目基于 C++ (Crow 框架) + Vue3 构建了多语种智能单词记忆背诵平台。
+
+## 〇、 后端技术栈 (C++ 重构)
+- **Web 框架**: 采用轻量级、高性能的 C++ 微框架 **Crow**，提供 RESTful API。
+- **数据库连接**: 使用 MySQL Connector/C++ 实现对底层数据库的增删改查。
+- **Redis 客户端**: 采用 `hiredis` 或 `cpp_redis` 实现缓存读写。
+- **编译构建**: 使用 CMake 进行项目的依赖管理和构建。
+
 ## 一、 数据库分层存储架构设计
 
 为了满足多语种单词记忆平台的高并发查询与稳定存储需求，系统采用了**三层混合存储架构**：
 1. **持久化层 (MySQL 8.0 / 达梦 DM8)**：负责核心业务数据（用户、词库、学习记录、订单等）的可靠存储，保证ACID特性。
 2. **高速缓存层 (Redis 7.0)**：负责高频访问数据（热点单词、用户Session、学习统计排行）的缓存，极大降低数据库读取压力，采用 Cluster 集群模式部署。
-3. **应用内存层 (Java手写内存数据库/LocalCache)**：针对字典表、极高频且不常变动的全局配置，采用自研内存数据库加载到应用JVM中，实现微秒级响应。
+3. **应用内存层 (C++手写内存数据库/LocalCache)**：针对字典表、极高频且不常变动的全局配置，采用自研内存数据库（使用 C++ 的 `std::unordered_map` 或类似结构）加载到应用进程中，实现微秒级响应。
 
 ## 二、 9大业务实体完整文字E-R模型
 
@@ -75,7 +83,7 @@
 
 ### 案例4：大批量数据插入优化
 **原SQL**：循环执行 `INSERT INTO rel_book_word ...`
-**优化后**：`INSERT INTO rel_book_word (book_id, word_id) VALUES (1,1), (1,2), ...`，并在 JDBC 连接串增加 `rewriteBatchedStatements=true`。
+**优化后**：`INSERT INTO rel_book_word (book_id, word_id) VALUES (1,1), (1,2), ...`，并使用 MySQL Connector/C++ 的批量执行接口进行优化。
 
 ## 六、 MySQL+Redis单词缓存联动
 
@@ -86,15 +94,15 @@
 
 ## 七、 国产达梦数据库适配改造方案
 
-1. **方言切换**：MyBatis-Plus 配置更换为达梦方言 `dm.jdbc.driver.DmDriver`。
+1. **驱动切换**：底层数据库连接更换为达梦提供的 ODBC/C/C++ 驱动，并适配对应的 SQL 方言。
 2. **大小写敏感**：达梦默认对象名大写。为保持代码兼容，通过达梦配置参数或在建表时强制使用双引号保留小写。
 3. **自增主键**：将MySQL的 `AUTO_INCREMENT` 转换为达梦的 `IDENTITY(1,1)` 或使用 Sequence 序列。
 4. **函数替换**：如将 MySQL 的 `IFNULL()` 替换为标准SQL的 `COALESCE()`，`NOW()` 替换为 `SYSDATE`。
 
-## 八、 Java手写简易内存数据库引擎
+## 八、 C++手写简易内存数据库引擎
 
-为支撑极高频配置读取，团队使用Java原生集合体系实现了精简内存数据库 `MiniMemDB`：
-- **存储结构**：采用 `ConcurrentHashMap<String, Object>` 作为数据容器，保障线程安全。
-- **索引机制**：针对特定字段，额外维护 `TreeMap` 作为B+树的内存平替，支持范围查找。
-- **淘汰策略**：基于 `LinkedHashMap` 实现 LRU (Least Recently Used) 淘汰算法，防止OOM。
-- **持久化**：使用定时任务（ScheduledExecutorService）每5分钟将内存快照序列化（JSON/Protobuf）落盘至本地 `.dat` 文件，启动时反序列化加载。
+为支撑极高频配置读取，团队使用 C++ STL 体系实现了精简内存数据库 `MiniMemDB`：
+- **存储结构**：采用 `std::unordered_map<std::string, std::any>` 结合读写锁（`std::shared_mutex`）作为数据容器，保障线程安全。
+- **索引机制**：针对特定字段，额外维护 `std::map` 作为B+树的内存平替，支持范围查找。
+- **淘汰策略**：基于 `std::list` 和 `std::unordered_map` 组合实现 LRU (Least Recently Used) 淘汰算法，防止内存溢出。
+- **持久化**：使用定时器线程每5分钟将内存快照序列化（JSON/Protobuf）落盘至本地 `.dat` 文件，启动时反序列化加载。

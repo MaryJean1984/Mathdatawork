@@ -44,3 +44,10 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+
+# Oxford Dictionaries API Configuration (第三方API接入配置)
+oxford:
+  api:
+    base-url: https://od-api.oxforddictionaries.com/api/v2
+    app-id: YOUR_OXFORD_APP_ID_HERE
+    app-key: YOUR_OXFORD_APP_KEY_HERE

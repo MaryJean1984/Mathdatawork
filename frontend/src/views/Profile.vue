@@ -1,23 +1,23 @@
 <template>
-  <div class="profile-container">
-    <el-card class="box-card">
+  <div class="profile-container fluid-container">
+    <el-card class="box-card glass-card">
       <template #header>
         <div class="card-header">
-          <span>编辑个人资料</span>
+          <span class="neon-text title">USER PROFILE</span>
         </div>
       </template>
-      <el-form :model="profileForm" label-width="100px">
-        <el-form-item label="昵称">
+      <el-form :model="profileForm" label-width="120px" class="glass-form" label-position="top">
+        <el-form-item label="NICKNAME / 昵称">
           <el-input v-model="profileForm.nickname"></el-input>
         </el-form-item>
-        <el-form-item label="个人简介">
-          <el-input type="textarea" v-model="profileForm.bio"></el-input>
-        </el-form-item>
-        <el-form-item label="年龄">
+        <el-form-item label="AGE / 年龄">
           <el-input-number v-model="profileForm.age" :min="1" :max="120"></el-input-number>
         </el-form-item>
+        <el-form-item label="BIO / 个人简介">
+          <el-input v-model="profileForm.bio" type="textarea" rows="4"></el-input>
+        </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="saveProfile">保存修改</el-button>
+          <el-button type="primary" class="glow-btn" @click="saveProfile">SAVE CHANGES</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -42,10 +42,30 @@ const saveProfile = () => {
 
 <style scoped>
 .profile-container {
-  padding: 20px;
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
 }
 .box-card {
+  width: 100%;
   max-width: 600px;
-  margin: 0 auto;
+}
+.card-header {
+  text-align: center;
+}
+.title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+.glass-form :deep(.el-form-item__label) {
+  color: var(--text-secondary);
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+.glow-btn {
+  width: 100%;
+  margin-top: 20px;
+  letter-spacing: 2px;
 }
 </style>

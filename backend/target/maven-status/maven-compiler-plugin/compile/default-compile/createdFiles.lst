@@ -1,0 +1,16 @@
+com\word\entity\QuestionBank.class
+com\word\mapper\SysUserMapper.class
+com\word\controller\SysUserController.class
+com\word\cache\AiDictationMemoryDb$CacheItem.class
+com\word\entity\DictationRecord.class
+com\word\entity\SysRole.class
+com\word\entity\SysRoleMenu.class
+com\word\entity\SysUserRole.class
+com\word\entity\QuestionCategory.class
+com\word\service\SysUserService.class
+com\word\MathdataApplication.class
+com\word\entity\DictationDetail.class
+com\word\entity\SysMenu.class
+com\word\entity\SysUser.class
+com\word\cache\AiDictationMemoryDb.class
+com\word\service\impl\SysUserServiceImpl.class

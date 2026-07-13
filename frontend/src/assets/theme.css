@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap');
+
+:root {
+  --bg-dark: #05050a;
+  --neon-cyan: #00f3ff;
+  --neon-cyan-dim: rgba(0, 243, 255, 0.15);
+  --neon-purple: #bc13fe;
+  --neon-purple-dim: rgba(188, 19, 254, 0.15);
+  --glass-bg: rgba(20, 20, 30, 0.35);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --soft-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.6);
+  --text-primary: #f0f0f5;
+  --text-secondary: #a0a0b0;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-dark);
+  /* gradient mesh & noise texture */
+  background-image: 
+    radial-gradient(circle at 15% 50%, rgba(0, 243, 255, 0.06), transparent 35%),
+    radial-gradient(circle at 85% 30%, rgba(188, 19, 254, 0.06), transparent 35%),
+    radial-gradient(circle at 50% 100%, rgba(0, 243, 255, 0.04), transparent 40%),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+  background-attachment: fixed;
+  color: var(--text-primary);
+  /* 放大且更可爱的字体排版 */
+  font-family: 'Nunito', 'YouYuan', '幼圆', 'PingFang SC', 'Microsoft YaHei', 'Comic Sans MS', sans-serif;
+  font-size: 16px; /* 提升基础字号 */
+  line-height: 1.8;
+  letter-spacing: 0.5px;
+  overflow-x: hidden;
+}
+
+/* Glass Card / 毛玻璃容器 */
+.glass-card {
+  background: var(--glass-bg) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid var(--glass-border) !important;
+  box-shadow: var(--soft-shadow) !important;
+  border-radius: 20px !important; /* 更圆润的倒角 */
+  color: var(--text-primary) !important;
+  transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  overflow: hidden;
+  padding: 10px; /* 增加整体卡片内间距使得不那么紧凑 */
+}
+.glass-card:hover {
+  box-shadow: 0 15px 50px -10px var(--neon-cyan-dim) !important;
+  border-color: rgba(0, 243, 255, 0.2) !important;
+}
+
+/* Bento Grid 模块化布局 */
+.bento-grid {
+  display: grid;
+  gap: 30px; /* 增加网格间距，拉开呼吸感 */
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+/* Fluid Layout & Responsive */
+.fluid-container {
+  width: 100%;
+  max-width: 1600px; /* 扩大最大宽度，让排版更舒展 */
+  margin: 0 auto;
+  padding: 40px; /* 增加外围留白 */
+}
+
+/* 霓虹发光文字 */
+.neon-text {
+  background: linear-gradient(90deg, var(--neon-cyan), var(--neon-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 20px var(--neon-cyan-dim);
+}
+
+/* Element Plus 深度定制覆盖 */
+.el-card {
+  background: transparent !important;
+  border: none !important;
+}
+.el-card__header {
+  border-bottom: 1px solid var(--glass-border) !important;
+  color: var(--text-primary) !important;
+  padding: 20px 30px !important; /* 扩大头部 padding */
+  font-size: 1.2rem;
+}
+
+/* 输入框微弱内发光 */
+.el-input__wrapper, .el-textarea__inner {
+  background: rgba(0, 0, 0, 0.3) !important;
+  box-shadow: 0 0 0 1px var(--glass-border) inset !important;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  padding: 8px 15px !important; /* 更宽松的输入框 */
+  border-radius: 12px !important; /* 更可爱的输入框圆角 */
+}
+.el-input__wrapper.is-focus, .el-textarea__inner:focus {
+  box-shadow: 0 0 15px var(--neon-cyan-dim), 0 0 0 1px var(--neon-cyan) inset !important;
+}
+.el-input__inner {
+  color: var(--text-primary) !important;
+  font-size: 1.1rem !important; /* 放大输入框文字 */
+}
+
+/* 按钮微弱发光渐变 */
+.el-button {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid var(--glass-border) !important;
+  color: var(--text-primary) !important;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  border-radius: 12px !important; /* 更可爱的按钮圆角 */
+  padding: 12px 24px !important; /* 加宽按钮 */
+  font-size: 1.1rem !important;
+}
+.el-button:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-2px);
+}
+.el-button--primary {
+  background: linear-gradient(135deg, var(--neon-cyan-dim), var(--neon-purple-dim)) !important;
+  border-color: rgba(0, 243, 255, 0.4) !important;
+  color: #fff !important;
+  box-shadow: 0 0 15px var(--neon-cyan-dim);
+}
+.el-button--primary:hover {
+  box-shadow: 0 0 25px rgba(0, 243, 255, 0.4) !important;
+  border-color: var(--neon-cyan) !important;
+}
+
+/* 表格玻璃态适配 */
+.el-table, .el-table tr, .el-table th.el-table__cell {
+  background-color: transparent !important;
+  color: var(--text-secondary) !important;
+  font-size: 1.1rem; /* 放大表格字体 */
+}
+.el-table td.el-table__cell, .el-table th.el-table__cell.is-leaf {
+  border-bottom: 1px solid var(--glass-border) !important;
+  padding: 16px 0 !important; /* 增加表格行距 */
+}
+.el-table--enable-row-hover .el-table__body tr:hover > td.el-table__cell {
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+.el-table__empty-text {
+  color: var(--text-secondary) !important;
+  font-size: 1.2rem;
+}
+
+/* 标签样式 */
+.el-tag {
+  background: rgba(0, 243, 255, 0.1) !important;
+  border: 1px solid rgba(0, 243, 255, 0.2) !important;
+  color: var(--neon-cyan) !important;
+  border-radius: 8px !important;
+  padding: 4px 10px !important; /* 宽松的 Tag */
+  font-size: 0.95rem !important;
+}
+.el-tag--danger {
+  background: rgba(254, 19, 104, 0.1) !important;
+  border-color: rgba(254, 19, 104, 0.2) !important;
+  color: #ff4d4f !important;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 243, 255, 0.3);
+}
