@@ -105,7 +105,7 @@ const initMessages = () => {
   messages.value.push({
     role: 'assistant',
     type: 'greeting',
-    text: `你好，${getNickname()}！我是小词，你的专属学习助手！🦆`
+    text: `你好，${getNickname()}！我是小词，你的专属学习助手！`
   })
 
   const { target, wordsToday } = getStudyProgress()
@@ -114,13 +114,13 @@ const initMessages = () => {
       messages.value.push({
         role: 'assistant',
         type: 'target-reminder',
-        text: `今日自律目标 ${target} 词已达成！你太棒了！🎉`
+        text: `今日自律目标 ${target} 词已达成！你太棒了！`
       })
     } else {
       messages.value.push({
         role: 'assistant',
         type: 'target-reminder',
-        text: `今天还要背 ${target - wordsToday} 个单词才能完成自律目标哦，冲鸭！🚀`
+        text: `今天还要背 ${target - wordsToday} 个单词才能完成自律目标哦，冲鸭！`
       })
     }
   }
@@ -177,7 +177,7 @@ const sendMessage = async () => {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
     
     // 构建系统提示词与上下文
-    const systemContext = `你现在的身份是一个名叫“小词”的AI英语学习助手，你的形象是一只可爱的蓝色画眉鸟。用户的昵称是“${getNickname()}”。请用活泼、鼓励、简短的语气回答用户的英语学习问题，或者进行日常对话。不要输出过长的长篇大论。`
+    const systemContext = `你现在的身份是一个名叫“小词”的AI英语学习助手，你的形象是一只可爱的蓝色画眉鸟。用户的昵称是“${getNickname()}”。请用活泼、鼓励、简短的语气回答用户的英语学习问题，或者进行日常对话。不要输出过长的长篇大论。请注意：在所有的回复中，绝对不要使用任何Emoji表情符号。`
     
     const prompt = `${systemContext}\n用户说：${text}\n小词回答：`
     
