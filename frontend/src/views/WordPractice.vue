@@ -46,6 +46,16 @@
           </el-button>
         </div>
 
+        <!-- 知道 / 不知道 快捷操作区 -->
+        <div class="quick-actions">
+          <el-button type="danger" plain @click="markAsUnknown" class="action-btn glass-btn" :disabled="hasAnswered">
+            <el-icon><Warning /></el-icon> 不知道 (加入待背库)
+          </el-button>
+          <el-button type="success" plain @click="markAsKnown" class="action-btn glass-btn" :disabled="hasAnswered">
+            <el-icon><Check /></el-icon> 知道 (直接跳过)
+          </el-button>
+        </div>
+
         <!-- 导航按钮 -->
         <div class="nav-buttons">
           <el-button type="info" plain @click="prevQuestion" :disabled="currentIndex <= 0" class="nav-btn glass-btn">
@@ -77,7 +87,7 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
+import { ArrowLeft, ArrowRight, Warning, Check } from '@element-plus/icons-vue'
 
 // 【核心改造】动态生成 30,000+ 级别的海量模拟词库
 const generateMassiveDictionary = () => {
@@ -323,6 +333,42 @@ const recordError = (wordObj) => {
   localStorage.setItem('errorWords', JSON.stringify(errorWords))
 }
 
+const markAsUnknown = () => {
+  const current = currentQuestionData.value
+  if (!current || current.hasAnswered) return
+  
+  current.hasAnswered = true
+  
+  // 加入待背库
+  let toMemorizeWords = JSON.parse(localStorage.getItem('toMemorizeWords') || '[]')
+  const exists = toMemorizeWords.find(w => w.word === current.question.word)
+  if (!exists) {
+    toMemorizeWords.push({ ...current.question, addedAt: new Date().toISOString() })
+    localStorage.setItem('toMemorizeWords', JSON.stringify(toMemorizeWords))
+    ElMessage.warning(`已将 "${current.question.word}" 加入待背库`)
+  } else {
+    ElMessage.info(`"${current.question.word}" 已在待背库中`)
+  }
+  
+  // 直接跳过到下一题
+  setTimeout(() => {
+    nextQuestion()
+  }, 800)
+}
+
+const markAsKnown = () => {
+  const current = currentQuestionData.value
+  if (!current || current.hasAnswered) return
+  
+  current.hasAnswered = true
+  ElMessage.success(`跳过 "${current.question.word}"，继续下一题`)
+  
+  // 直接跳过到下一题
+  setTimeout(() => {
+    nextQuestion()
+  }, 500)
+}
+
 onMounted(() => {
   loadNewQuestion()
 })
@@ -379,10 +425,20 @@ onMounted(() => {
 
 /* 导航按钮样式 */
 .nav-buttons {
-  margin-top: 40px;
+  margin-top: 20px;
   display: flex;
   justify-content: space-between;
   padding: 0 20px;
+}
+.quick-actions {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 30px;
+}
+.action-btn {
+  font-size: 1.1rem;
+  padding: 12px 30px !important;
 }
 .glass-btn {
   background: rgba(255, 255, 255, 0.05) !important;

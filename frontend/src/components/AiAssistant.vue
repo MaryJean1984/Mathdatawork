@@ -5,9 +5,6 @@
       <div class="chat-header">
         <span class="ai-name neon-text">小词</span>
         <div class="header-actions">
-          <el-tooltip content="重置 API Key" placement="top">
-            <el-icon class="action-btn" @click="resetApiKey"><Setting /></el-icon>
-          </el-tooltip>
           <el-icon class="close-btn" @click="toggleChat"><Close /></el-icon>
         </div>
       </div>
@@ -59,7 +56,6 @@
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { Close, Setting, Position } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { GoogleGenerativeAI } from '@google/generative-ai'
 import avatarImg from '../assets/ai_avatar.png'
 
 const isOpen = ref(false)
@@ -126,37 +122,7 @@ const initMessages = () => {
   }
 }
 
-// Gemini AI 聊天逻辑
-const getApiKey = async () => {
-  let key = localStorage.getItem('geminiApiKey')
-  if (!key) {
-    try {
-      const { value } = await ElMessageBox.prompt(
-        '为了使用小词的智能问答功能，请填入您的 Gemini API Key：', 
-        '配置 Gemini AI', 
-        {
-          confirmButtonText: '保存',
-          cancelButtonText: '取消',
-          inputPattern: /.+/,
-          inputErrorMessage: 'API Key 不能为空'
-        }
-      )
-      key = value
-      localStorage.setItem('geminiApiKey', key)
-      ElMessage.success('API Key 保存成功！')
-    } catch (e) {
-      ElMessage.warning('取消配置，将无法使用智能对话功能。')
-      return null
-    }
-  }
-  return key
-}
-
-const resetApiKey = () => {
-  localStorage.removeItem('geminiApiKey')
-  ElMessage.success('API Key 已清除，下次聊天将重新提示输入。')
-}
-
+// Pollinations AI 免费聊天逻辑
 const sendMessage = async () => {
   const text = userInput.value.trim()
   if (!text) return
@@ -165,36 +131,45 @@ const sendMessage = async () => {
   userInput.value = ''
   scrollToBottom()
 
-  const apiKey = await getApiKey()
-  if (!apiKey) return
-
   isTyping.value = true
   scrollToBottom()
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey)
-    // 使用 gemini-1.5-pro 或者 gemini-pro
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
-    
-    // 构建系统提示词与上下文
     const systemContext = `你现在的身份是一个名叫“小词”的AI英语学习助手，你的形象是一只可爱的蓝色画眉鸟。用户的昵称是“${getNickname()}”。请用活泼、鼓励、简短的语气回答用户的英语学习问题，或者进行日常对话。不要输出过长的长篇大论。请注意：在所有的回复中，绝对不要使用任何Emoji表情符号。`
     
-    const prompt = `${systemContext}\n用户说：${text}\n小词回答：`
-    
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    
-    messages.value.push({ role: 'assistant', text: response.text() })
+    // 构建 OpenAI 格式的 messages
+    const apiMessages = [
+      { role: 'system', content: systemContext },
+      // 携带部分历史记录以保持上下文（这里简略处理，只传当前对话）
+      { role: 'user', content: text }
+    ]
+
+    const response = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: apiMessages,
+        model: 'openai', // 或保留默认
+      })
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    const data = await response.json()
+    const replyText = data.choices[0].message.content
+
+    messages.value.push({ role: 'assistant', text: replyText })
   } catch (error) {
     console.error(error)
     messages.value.push({ 
       role: 'assistant', 
       type: 'error',
-      text: '抱歉，小词的接口开小差了，请检查网络或确认 API Key 是否正确哦。' 
+      text: '抱歉，小词的接口开小差了，请稍后再试哦。' 
     })
-    if (error.message && error.message.includes('API key not valid')) {
-      localStorage.removeItem('geminiApiKey')
-    }
   } finally {
     isTyping.value = false
     scrollToBottom()
