@@ -1,5 +1,12 @@
 <template>
   <div class="register-container fluid-container">
+    <!-- 艺术体单词荧光花纹背景 -->
+    <div class="art-word-pattern pattern-1">Vocabulary</div>
+    <div class="art-word-pattern pattern-2">Epiphany</div>
+    <div class="art-word-pattern pattern-3">Serendipity</div>
+    <div class="art-word-pattern pattern-4">Eloquence</div>
+    <div class="art-word-pattern pattern-5">Paradigm</div>
+
     <el-card class="box-card glass-card">
       <template #header>
         <div class="card-header">
@@ -74,11 +81,72 @@ const submitForm = () => {
   justify-content: center;
   align-items: center;
   height: 100%;
+  position: relative;
+  overflow: hidden;
 }
+
+/* 艺术体单词荧光花纹样式 */
+.art-word-pattern {
+  position: absolute;
+  font-family: 'Comic Sans MS', cursive, 'Brush Script MT', 'Dancing Script', sans-serif;
+  font-size: 6rem;
+  font-weight: 900;
+  opacity: 0.15;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 0;
+  transform: rotate(-15deg);
+  user-select: none;
+}
+
+.pattern-1 {
+  top: 10%;
+  left: -5%;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 30px var(--neon-cyan);
+}
+
+.pattern-2 {
+  bottom: 15%;
+  right: -5%;
+  color: var(--neon-purple);
+  text-shadow: 0 0 30px var(--neon-purple);
+  transform: rotate(10deg);
+  font-size: 8rem;
+}
+
+.pattern-3 {
+  top: 40%;
+  right: -10%;
+  color: #00ff80;
+  text-shadow: 0 0 30px #00ff80;
+  transform: rotate(-25deg);
+  font-size: 5rem;
+}
+
+.pattern-4 {
+  bottom: 5%;
+  left: 10%;
+  color: #ffd04b;
+  text-shadow: 0 0 30px #ffd04b;
+  transform: rotate(15deg);
+  font-size: 4rem;
+}
+
+.pattern-5 {
+  top: 5%;
+  right: 20%;
+  color: #ff0055;
+  text-shadow: 0 0 30px #ff0055;
+  transform: rotate(5deg);
+  font-size: 3rem;
+}
+
 .box-card {
   width: 100%;
   max-width: 480px;
   padding: 20px;
+  z-index: 10; /* 确保表单在花纹之上 */
 }
 .card-header {
   text-align: center;
