@@ -22,12 +22,14 @@ html, body {
     /* 科技感网格底纹 */
     linear-gradient(rgba(0, 243, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(0, 243, 255, 0.03) 1px, transparent 1px),
+    /* 蜂窝六边形高科技底纹 (SVG Hexagon Pattern) */
+    url("data:image/svg+xml,%3Csvg width='60' height='103.92' viewBox='0 0 60 103.92' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l30 17.32v34.64L30 69.28 0 51.96V17.32L30 0zm0 34.64l15-8.66v-17.32L30 0 15 8.66v17.32l15 8.66z' fill='rgba(0,243,255,0.02)' fill-rule='evenodd'/%3E%3C/svg%3E"),
     /* 渐变流光与噪点 */
-    radial-gradient(circle at 15% 50%, rgba(0, 243, 255, 0.06), transparent 35%),
-    radial-gradient(circle at 85% 30%, rgba(188, 19, 254, 0.06), transparent 35%),
-    radial-gradient(circle at 50% 100%, rgba(0, 243, 255, 0.04), transparent 40%),
+    radial-gradient(circle at 15% 50%, rgba(0, 243, 255, 0.08), transparent 45%),
+    radial-gradient(circle at 85% 30%, rgba(188, 19, 254, 0.08), transparent 45%),
+    radial-gradient(circle at 50% 100%, rgba(0, 243, 255, 0.05), transparent 50%),
     url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
-  background-size: 40px 40px, 40px 40px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+  background-size: 40px 40px, 40px 40px, 60px 103.92px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
   background-attachment: fixed;
   color: var(--text-primary);
   /* 放大且更可爱的字体排版 */
@@ -36,6 +38,33 @@ html, body {
   line-height: 1.8;
   letter-spacing: 0.5px;
   overflow-x: hidden;
+  position: relative;
+}
+
+/* 增加科技感动态扫描线底纹 */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(
+    to bottom,
+    transparent 50%,
+    rgba(0, 243, 255, 0.02) 51%,
+    transparent 51%
+  );
+  background-size: 100% 4px;
+  pointer-events: none;
+  z-index: 9999;
+  animation: scanline 10s linear infinite;
+  opacity: 0.8;
+}
+
+@keyframes scanline {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 100vh; }
 }
 
 /* Glass Card / 毛玻璃容器 */
