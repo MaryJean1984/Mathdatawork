@@ -48,10 +48,10 @@
 
         <!-- 知道 / 不知道 快捷操作区 -->
         <div class="quick-actions">
-          <el-button type="danger" plain @click="markAsUnknown" class="action-btn glass-btn" :disabled="hasAnswered">
+          <el-button type="danger" plain @click="markAsUnknown" class="action-btn glass-btn">
             <el-icon><Warning /></el-icon> 不知道 (加入待背库)
           </el-button>
-          <el-button type="success" plain @click="markAsKnown" class="action-btn glass-btn" :disabled="hasAnswered">
+          <el-button type="success" plain @click="markAsKnown" class="action-btn glass-btn">
             <el-icon><Check /></el-icon> 知道 (直接跳过)
           </el-button>
         </div>
@@ -285,7 +285,10 @@ const checkDisciplineProgress = () => {
 let autoNextTimer = null
 const selectOption = (opt) => {
   const current = currentQuestionData.value
-  if (!current || current.hasAnswered) return
+  if (!current) return
+  
+  // 允许重新练习，但避免连续重复点击同一个选项刷分
+  if (current.hasAnswered && current.selectedWord === opt) return
   
   current.hasAnswered = true
   current.selectedWord = opt
@@ -303,10 +306,8 @@ const selectOption = (opt) => {
 
   clearTimeout(autoNextTimer)
   autoNextTimer = setTimeout(() => {
-    // 如果用户没有手动切换题目，则自动跳到下一题
-    if (currentIndex.value === questionHistory.value.length - 1) {
-      nextQuestion()
-    }
+    // 答题后自动跳到历史记录的下一个（或生成新题）
+    nextQuestion()
   }, 1500)
 }
 
@@ -335,7 +336,7 @@ const recordError = (wordObj) => {
 
 const markAsUnknown = () => {
   const current = currentQuestionData.value
-  if (!current || current.hasAnswered) return
+  if (!current) return
   
   current.hasAnswered = true
   
@@ -358,7 +359,7 @@ const markAsUnknown = () => {
 
 const markAsKnown = () => {
   const current = currentQuestionData.value
-  if (!current || current.hasAnswered) return
+  if (!current) return
   
   current.hasAnswered = true
   // 移除 Message 提示，实现无感静默跳过
