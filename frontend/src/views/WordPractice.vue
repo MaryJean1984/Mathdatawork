@@ -323,7 +323,7 @@ const recordError = (wordObj) => {
       if (!existsInHard) {
         hardWords.push({ ...wordObj, addedReason: '错误达到3次' })
         localStorage.setItem('hardWords', JSON.stringify(hardWords))
-        ElMessage.warning(`[SYSTEM ALERT] "${wordObj.word}" transferred to Hard Library!`)
+        ElMessage.warning(`[系统提示] "${wordObj.word}" 错误达到3次，已自动加入“难度词汇库”！`)
       }
     }
   } else {
