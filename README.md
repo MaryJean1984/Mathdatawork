@@ -39,12 +39,19 @@
 ## 💻 运行说明
 
 1. **前端启动**：
+   在根目录下，进入 `frontend` 文件夹并启动 Vite 开发服务器：
    ```bash
    cd frontend
    npm install
    npm run dev
    ```
-2. **后端编译**：
-   使用 Visual Studio C++ (MSVC) 工具链，进入 `backend_cpp` 目录运行 `run_backend.bat` 编译启动。
+2. **后端编译与启动**：
+   使用 Visual Studio C++ (MSVC) 工具链。在根目录下，进入 `backend_cpp` 文件夹，然后直接运行编译出的可执行文件（或使用您的 C++ 编译器重新编译）：
+   ```bash
+   cd backend_cpp
+   .\main.exe
+   ```
+   *(如果需要重新编译，可以在具有 MSVC 环境的终端中运行：`cl.exe /EHsc /MD /std:c++17 /I include /I include/asio-asio-1-28-0/asio/include /D_WIN32_WINNT=0x0601 /DCROW_ENABLE_STANDALONE main.cpp`)*
+
 3. **数据库脚本**：
    请依次在 MySQL 8.0 环境中执行 `db/` 目录下的 `schema.sql`, `v2_advanced_features.sql`, `v3_database_engineering_upgrade.sql`。
