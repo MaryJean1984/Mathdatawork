@@ -63,10 +63,10 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 
-const profileForm = reactive({
+const defaultProfile = {
   account: 'user_001',
   nickname: 'CyberStudent',
   realName: '张三',
@@ -78,6 +78,16 @@ const profileForm = reactive({
   studyStage: 'beginner',
   studyGoal: 'CET-4',
   bio: '我爱学习，学习使我快乐。'
+}
+
+const profileForm = reactive({ ...defaultProfile })
+
+onMounted(() => {
+  // 页面加载时从 localStorage 读取已保存的用户信息
+  const savedProfile = localStorage.getItem('userProfile')
+  if (savedProfile) {
+    Object.assign(profileForm, JSON.parse(savedProfile))
+  }
 })
 
 const saveProfile = async () => {
@@ -85,7 +95,11 @@ const saveProfile = async () => {
   try {
     // 假设调用后端更新接口
     // await fetch('/api/user/update', { method: 'POST', body: JSON.stringify({ userId: '1', ...profileForm }) })
-    ElMessage.success('个人资料已成功更新并同步至数据库！')
+    
+    // 将修改后的数据保存到 localStorage 中，保证页面切换后数据不丢失
+    localStorage.setItem('userProfile', JSON.stringify(profileForm))
+    
+    ElMessage.success('个人资料已成功更新并同步！')
     console.log('保存的数据：', profileForm)
   } catch (e) {
     ElMessage.error('更新失败')

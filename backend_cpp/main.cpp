@@ -1,4 +1,6 @@
 #include "crow.h"
+#undef POST
+
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -80,7 +82,7 @@ int main()
     // ==========================================
     // 核心亮点 2：三层缓存架构下的“延迟双删”策略保障数据一致性
     // ==========================================
-    CROW_ROUTE(app, "/api/user/update").methods(crow::HTTPMethod::POST)([](const crow::request& req){
+    CROW_ROUTE(app, "/api/user/update").methods(crow::HTTPMethod::Post)([](const crow::request& req){
         auto body = crow::json::load(req.body);
         if (!body) return crow::response(400, "Invalid JSON");
 
@@ -114,7 +116,7 @@ int main()
     // ==========================================
     // 核心亮点 4：MySQL 8.0 JSON 字段的高效处理与更新
     // ==========================================
-    CROW_ROUTE(app, "/api/words/ai_detail").methods(crow::HTTPMethod::POST)([](const crow::request& req){
+    CROW_ROUTE(app, "/api/words/ai_detail").methods(crow::HTTPMethod::Post)([](const crow::request& req){
         auto body = crow::json::load(req.body);
         if (!body) return crow::response(400, "Invalid JSON");
 
