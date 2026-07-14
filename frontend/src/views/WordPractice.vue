@@ -27,6 +27,9 @@
         
         <div class="meaning-wrapper">
           <h2 class="meaning-title neon-text">{{ currentQuestion.meaning }}</h2>
+          <div class="instruction-text" :class="{'neon-text': currentLevel !== 'master'}">
+            {{ currentLevel === 'master' ? 'SELECT THE CORRECT PROTOCOL MATCH' : '请根据上方中文释义，选择正确的英文单词：' }}
+          </div>
           <div v-if="currentLevel === 'master'" class="glitch-overlay">DATA ENCRYPTED</div>
         </div>
 
@@ -85,32 +88,49 @@ const generateMassiveDictionary = () => {
   }
 
   // 1. 生成入门等级 (10000 词)
-  const baseBeginner = ['apple', 'book', 'cat', 'dog', 'water', 'sun', 'moon', 'tree', 'bird', 'fish', 'sky', 'star']
+  const baseBeginner = [
+    { w: 'apple', m: 'n. 苹果' }, { w: 'book', m: 'n. 书本' }, { w: 'cat', m: 'n. 猫' },
+    { w: 'dog', m: 'n. 狗' }, { w: 'water', m: 'n. 水' }, { w: 'sun', m: 'n. 太阳' },
+    { w: 'moon', m: 'n. 月亮' }, { w: 'tree', m: 'n. 树木' }, { w: 'bird', m: 'n. 鸟' },
+    { w: 'fish', m: 'n. 鱼' }, { w: 'sky', m: 'n. 天空' }, { w: 'star', m: 'n. 星星' }
+  ]
   for (let i = 0; i < 10050; i++) {
-    const baseWord = baseBeginner[i % baseBeginner.length]
+    const item = baseBeginner[i % baseBeginner.length]
     dictionary.beginner.push({
-      word: baseWord,
-      meaning: `n. 基础词汇`
+      word: item.w,
+      meaning: item.m
     })
   }
 
   // 2. 生成精通等级 (10000 词)
-  const baseProficient = ['abandon', 'beneath', 'capacity', 'delight', 'eager', 'genuine', 'hesitate', 'inspire', 'frequent', 'predict']
+  const baseProficient = [
+    { w: 'abandon', m: 'v. 放弃，抛弃' }, { w: 'beneath', m: 'prep. 在...之下' },
+    { w: 'capacity', m: 'n. 容量；能力' }, { w: 'delight', m: 'n. 高兴；v. 使高兴' },
+    { w: 'eager', m: 'adj. 渴望的，热切的' }, { w: 'genuine', m: 'adj. 真实的；真诚的' },
+    { w: 'hesitate', m: 'v. 犹豫，踌躇' }, { w: 'inspire', m: 'v. 鼓舞；激发' },
+    { w: 'frequent', m: 'adj. 频繁的' }, { w: 'predict', m: 'v. 预言，预测' }
+  ]
   for (let i = 0; i < 10200; i++) {
-    const baseWord = baseProficient[i % baseProficient.length]
+    const item = baseProficient[i % baseProficient.length]
     dictionary.proficient.push({
-      word: baseWord,
-      meaning: `v./adj. 进阶词汇`
+      word: item.w,
+      meaning: item.m
     })
   }
 
   // 3. 生成大师等级 (10000 词)
-  const baseMaster = ['ephemeral', 'serendipity', 'ubiquitous', 'eloquent', 'resilient', 'enigmatic', 'ineffable', 'paradigm', 'obfuscate', 'pragmatic']
+  const baseMaster = [
+    { w: 'ephemeral', m: 'adj. 短暂的' }, { w: 'serendipity', m: 'n. 机缘巧合' },
+    { w: 'ubiquitous', m: 'adj. 无处不在的' }, { w: 'eloquent', m: 'adj. 雄辩的' },
+    { w: 'resilient', m: 'adj. 能恢复活力的' }, { w: 'enigmatic', m: 'adj. 神秘的' },
+    { w: 'ineffable', m: 'adj. 难以形容的' }, { w: 'paradigm', m: 'n. 范例；典范' },
+    { w: 'obfuscate', m: 'v. 使模糊；使困惑' }, { w: 'pragmatic', m: 'adj. 务实的' }
+  ]
   for (let i = 0; i < 10100; i++) {
-    const baseWord = baseMaster[i % baseMaster.length]
+    const item = baseMaster[i % baseMaster.length]
     dictionary.master.push({
-      word: baseWord,
-      meaning: `adj./n. 托福/GRE级词汇`
+      word: item.w,
+      meaning: item.m
     })
   }
 
@@ -386,9 +406,15 @@ onMounted(() => {
 }
 .layout-beginner .meaning-title {
   font-size: 3rem;
-  margin-bottom: 40px;
+  margin-bottom: 10px;
   letter-spacing: 2px;
   color: #fff;
+}
+.instruction-text {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  margin-bottom: 30px;
+  letter-spacing: 1px;
 }
 .layout-beginner .options-wrapper {
   display: grid;
@@ -423,9 +449,14 @@ onMounted(() => {
 }
 .layout-proficient .meaning-title {
   font-size: 2rem;
-  margin: 0;
+  margin: 0 0 10px 0;
   text-align: left;
   color: #ffd04b;
+}
+.layout-proficient .instruction-text {
+  text-align: left;
+  color: rgba(255, 208, 75, 0.8);
+  font-size: 1rem;
 }
 .layout-proficient .options-wrapper {
   display: grid;
@@ -469,6 +500,13 @@ onMounted(() => {
   color: #ff0055;
   font-family: monospace;
   text-shadow: 2px 0 0 #bc13fe, -2px 0 0 #00f3ff;
+  margin-bottom: 15px;
+}
+.layout-master .instruction-text {
+  font-family: monospace;
+  color: #a0a0b0;
+  letter-spacing: 2px;
+  font-size: 0.9rem;
 }
 .glitch-overlay {
   position: absolute;
