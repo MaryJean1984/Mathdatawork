@@ -224,6 +224,54 @@ const getOptionType = (opt) => {
   return 'primary'
 }
 
+const checkDisciplineProgress = () => {
+  const dailyTarget = parseInt(localStorage.getItem('dailyTarget') || '0')
+  if (dailyTarget <= 0) return
+
+  let progress = JSON.parse(localStorage.getItem('studyProgress') || '{}')
+  let honors = JSON.parse(localStorage.getItem('userHonors') || '{"medals": 0, "flags": 0}')
+  const today = new Date().toDateString()
+
+  // 初始化或跨天重置
+  if (progress.lastDate !== today) {
+    progress.wordsToday = 0
+    progress.lastDate = today
+    progress.targetMetToday = false
+  }
+
+  // 增加背诵数量
+  progress.wordsToday += 1
+
+  // 判断是否达成每日目标
+  if (progress.wordsToday >= dailyTarget && !progress.targetMetToday) {
+    progress.targetMetToday = true
+    progress.streakDays = (progress.streakDays || 0) + 1
+    
+    // 发放勋章
+    honors.medals += 1
+    ElMessage({
+      message: `🎉 恭喜达成今日自律目标！获得 1 枚勋章 🏅！`,
+      type: 'success',
+      duration: 4000
+    })
+
+    // 判断是否连续 30 天
+    if (progress.streakDays >= 30) {
+      honors.flags += 1
+      progress.streakDays = 0 // 重置连击，重新算下一个30天
+      ElMessage({
+        message: `🏆 太强了！连续自律打卡 30 天！获得 1 面毅力旗帜 🚩！`,
+        type: 'warning',
+        duration: 5000
+      })
+    }
+
+    localStorage.setItem('userHonors', JSON.stringify(honors))
+  }
+
+  localStorage.setItem('studyProgress', JSON.stringify(progress))
+}
+
 let autoNextTimer = null
 const selectOption = (opt) => {
   const current = currentQuestionData.value
@@ -235,6 +283,8 @@ const selectOption = (opt) => {
   if (opt === current.question.word) {
     correctCount.value++
     ElMessage.success('CORRECT MATCH')
+    // 选择正确算背一个单词，同步自律进度条
+    checkDisciplineProgress()
   } else {
     incorrectCount.value++
     ElMessage.error(`ERROR! Target: ${current.question.word}`)
