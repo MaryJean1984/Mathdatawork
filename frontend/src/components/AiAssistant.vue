@@ -4,37 +4,69 @@
     <div class="chat-bubble glass-card" v-if="isOpen">
       <div class="chat-header">
         <span class="ai-name neon-text">小词</span>
-        <el-icon class="close-btn" @click="toggleChat"><Close /></el-icon>
+        <div class="header-actions">
+          <el-tooltip content="重置 API Key" placement="top">
+            <el-icon class="action-btn" @click="resetApiKey"><Setting /></el-icon>
+          </el-tooltip>
+          <el-icon class="close-btn" @click="toggleChat"><Close /></el-icon>
+        </div>
       </div>
-      <div class="chat-content">
-        <div class="message greeting">
-          <p>{{ greetingMessage }}</p>
+      
+      <div class="chat-content" ref="chatContainer">
+        <div 
+          v-for="(msg, index) in messages" 
+          :key="index" 
+          class="message-row"
+          :class="msg.role"
+        >
+          <div class="message-bubble" :class="msg.type || 'normal'">
+            <p>{{ msg.text }}</p>
+          </div>
         </div>
-        <div class="message target-reminder" v-if="targetMessage">
-          <p>{{ targetMessage }}</p>
+        
+        <div v-if="isTyping" class="message-row assistant">
+          <div class="message-bubble typing">
+            <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          </div>
         </div>
-        <div class="message encourage">
-          <p>{{ encourageMessage }}</p>
-        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <el-input 
+          v-model="userInput" 
+          placeholder="和小词聊聊英语..." 
+          @keyup.enter="sendMessage"
+          :disabled="isTyping"
+        >
+          <template #append>
+            <el-button @click="sendMessage" :disabled="isTyping || !userInput.trim()">
+              <el-icon><Position /></el-icon>
+            </el-button>
+          </template>
+        </el-input>
       </div>
     </div>
 
     <!-- AI 形象头像 (画眉鸟) -->
     <div class="avatar-container" @click="toggleChat">
       <div class="avatar-glow"></div>
-      <img :src="avatarUrl" alt="小词 - 画眉鸟" class="bird-avatar" />
+      <img :src="avatarImg" alt="小词 - 画眉鸟" class="bird-avatar" />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { Close } from '@element-plus/icons-vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
+import { Close, Setting, Position } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { GoogleGenerativeAI } from '@google/generative-ai'
+import avatarImg from '../assets/ai_avatar.png'
 
 const isOpen = ref(false)
-
-// 使用 Trae 文档要求的图片生成规则生成蓝色卡通画眉鸟
-const avatarUrl = ref('https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=cute%20blue%20cartoon%20laughingthrush%20bird%20vector%20art%20avatar%20cyberpunk%20style&image_size=square')
+const chatContainer = ref(null)
+const userInput = ref('')
+const isTyping = ref(false)
+const messages = ref([])
 
 // 获取用户信息和学习进度
 const getNickname = () => {
@@ -55,54 +87,126 @@ const getStudyProgress = () => {
 
 const toggleChat = () => {
   isOpen.value = !isOpen.value
+  if (isOpen.value) {
+    scrollToBottom()
+  }
 }
 
-// 动态生成消息
-const greetingMessage = computed(() => {
-  return `你好，${getNickname()}！我是小词，你的专属学习助手！🦆`
-})
+const scrollToBottom = async () => {
+  await nextTick()
+  if (chatContainer.value) {
+    chatContainer.value.scrollTop = chatContainer.value.scrollHeight
+  }
+}
 
-const targetMessage = computed(() => {
+// 初始化欢迎语和进度提醒
+const initMessages = () => {
+  messages.value = []
+  messages.value.push({
+    role: 'assistant',
+    type: 'greeting',
+    text: `你好，${getNickname()}！我是小词，你的专属学习助手！🦆`
+  })
+
   const { target, wordsToday } = getStudyProgress()
   if (target > 0) {
     if (wordsToday >= target) {
-      return `今日自律目标 ${target} 词已达成！你太棒了！🎉`
+      messages.value.push({
+        role: 'assistant',
+        type: 'target-reminder',
+        text: `今日自律目标 ${target} 词已达成！你太棒了！🎉`
+      })
     } else {
-      return `今天还要背 ${target - wordsToday} 个单词才能完成自律目标哦，冲鸭！🚀`
+      messages.value.push({
+        role: 'assistant',
+        type: 'target-reminder',
+        text: `今天还要背 ${target - wordsToday} 个单词才能完成自律目标哦，冲鸭！🚀`
+      })
     }
   }
-  return '你还没有设置每日自律目标哦，去【个人荣誉】里设置一下吧！'
-})
+}
 
-const encourageMessage = computed(() => {
-  const messages = [
-    `加油，${getNickname()}！你一定能行！`,
-    `每一个背下的单词，都是通往星辰大海的阶梯！`,
-    `${getNickname()}太棒啦！每一步努力都算数！`,
-    `相信自己，${getNickname()}的潜力是无限的！`
-  ]
-  // 这里用一个简单的随机，也可以固定
-  return messages[Math.floor(Math.random() * messages.length)]
-})
+// Gemini AI 聊天逻辑
+const getApiKey = async () => {
+  let key = localStorage.getItem('geminiApiKey')
+  if (!key) {
+    try {
+      const { value } = await ElMessageBox.prompt(
+        '为了使用小词的智能问答功能，请填入您的 Gemini API Key：', 
+        '配置 Gemini AI', 
+        {
+          confirmButtonText: '保存',
+          cancelButtonText: '取消',
+          inputPattern: /.+/,
+          inputErrorMessage: 'API Key 不能为空'
+        }
+      )
+      key = value
+      localStorage.setItem('geminiApiKey', key)
+      ElMessage.success('API Key 保存成功！')
+    } catch (e) {
+      ElMessage.warning('取消配置，将无法使用智能对话功能。')
+      return null
+    }
+  }
+  return key
+}
 
-// 监听 localstorage 变化以更新昵称 (可选)
-const handleStorageChange = () => {
-  // 强制刷新计算属性，这里 Vue 响应式无法直接监听 localStorage
-  // 实际项目中可使用 Pinia/Vuex，这里使用简易强制刷新
+const resetApiKey = () => {
+  localStorage.removeItem('geminiApiKey')
+  ElMessage.success('API Key 已清除，下次聊天将重新提示输入。')
+}
+
+const sendMessage = async () => {
+  const text = userInput.value.trim()
+  if (!text) return
+
+  messages.value.push({ role: 'user', text })
+  userInput.value = ''
+  scrollToBottom()
+
+  const apiKey = await getApiKey()
+  if (!apiKey) return
+
+  isTyping.value = true
+  scrollToBottom()
+
+  try {
+    const genAI = new GoogleGenerativeAI(apiKey)
+    // 使用 gemini-1.5-pro 或者 gemini-pro
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" })
+    
+    // 构建系统提示词与上下文
+    const systemContext = `你现在的身份是一个名叫“小词”的AI英语学习助手，你的形象是一只可爱的蓝色画眉鸟。用户的昵称是“${getNickname()}”。请用活泼、鼓励、简短的语气回答用户的英语学习问题，或者进行日常对话。不要输出过长的长篇大论。`
+    
+    const prompt = `${systemContext}\n用户说：${text}\n小词回答：`
+    
+    const result = await model.generateContent(prompt)
+    const response = await result.response
+    
+    messages.value.push({ role: 'assistant', text: response.text() })
+  } catch (error) {
+    console.error(error)
+    messages.value.push({ 
+      role: 'assistant', 
+      type: 'error',
+      text: '抱歉，小词的接口开小差了，请检查网络或确认 API Key 是否正确哦。' 
+    })
+    if (error.message && error.message.includes('API key not valid')) {
+      localStorage.removeItem('geminiApiKey')
+    }
+  } finally {
+    isTyping.value = false
+    scrollToBottom()
+  }
 }
 
 onMounted(() => {
-  window.addEventListener('storage', handleStorageChange)
-  // 首次进入默认打开打招呼
+  initMessages()
   setTimeout(() => {
     isOpen.value = true
   }, 1000)
 })
-
-onUnmounted(() => {
-  window.removeEventListener('storage', handleStorageChange)
-})
-
 </script>
 
 <style scoped>
@@ -117,15 +221,17 @@ onUnmounted(() => {
 }
 
 .chat-bubble {
-  width: 280px;
+  width: 320px;
   margin-bottom: 20px;
   border-radius: 16px;
   border: 1px solid rgba(0, 243, 255, 0.3);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 243, 255, 0.15);
-  background: rgba(10, 15, 25, 0.85);
+  background: rgba(10, 15, 25, 0.95);
   backdrop-filter: blur(15px);
   transform-origin: bottom right;
-  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  display: flex;
+  flex-direction: column;
 }
 
 .chat-header {
@@ -136,51 +242,97 @@ onUnmounted(() => {
   border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 .ai-name {
   font-weight: 800;
   font-size: 1.1rem;
   color: #00f3ff;
 }
 
-.close-btn {
+.action-btn, .close-btn {
   cursor: pointer;
   color: var(--text-secondary);
   transition: all 0.3s ease;
+  font-size: 1.1rem;
 }
 
-.close-btn:hover {
-  color: #ff4d4f;
-  transform: rotate(90deg);
-}
+.action-btn:hover { color: #ffd04b; }
+.close-btn:hover { color: #ff4d4f; transform: rotate(90deg); }
 
 .chat-content {
   padding: 15px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+.chat-content::-webkit-scrollbar { width: 4px; }
+.chat-content::-webkit-scrollbar-thumb { background: rgba(0, 243, 255, 0.3); border-radius: 4px; }
+
+.message-row {
+  display: flex;
+  width: 100%;
 }
 
-.message {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 10px 15px;
+.message-row.user {
+  justify-content: flex-end;
+}
+
+.message-row.assistant {
+  justify-content: flex-start;
+}
+
+.message-bubble {
+  max-width: 85%;
+  padding: 10px 14px;
   border-radius: 12px;
   font-size: 0.95rem;
   line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.message-row.user .message-bubble {
+  background: rgba(0, 243, 255, 0.2);
+  color: #fff;
+  border-bottom-right-radius: 2px;
+  border: 1px solid rgba(0, 243, 255, 0.4);
+}
+
+.message-row.assistant .message-bubble {
+  background: rgba(255, 255, 255, 0.05);
   color: #e0e0e0;
-  border-left: 3px solid transparent;
+  border-bottom-left-radius: 2px;
+  border-left: 3px solid #00f3ff;
 }
 
-.greeting {
-  border-left-color: #00f3ff;
+.message-bubble.greeting { border-left-color: #00f3ff; }
+.message-bubble.target-reminder { border-left-color: #ffd04b; }
+.message-bubble.error { border-left-color: #ff4d4f; color: #ff4d4f; }
+
+.chat-input-area {
+  padding: 10px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-.target-reminder {
-  border-left-color: #ffd04b;
+.chat-input-area :deep(.el-input-group__append) {
+  background-color: rgba(0, 243, 255, 0.1);
+  border-color: rgba(0, 243, 255, 0.3);
+  color: #00f3ff;
 }
 
-.encourage {
-  border-left-color: #bc13fe;
-  font-weight: bold;
+.chat-input-area :deep(.el-input__wrapper) {
+  background-color: rgba(0, 0, 0, 0.3);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+}
+
+.chat-input-area :deep(.el-input__inner) {
+  color: #fff;
 }
 
 .avatar-container {
@@ -204,6 +356,7 @@ onUnmounted(() => {
   border: 2px solid #00f3ff;
   position: relative;
   z-index: 2;
+  background: var(--bg-dark);
 }
 
 .avatar-glow {
@@ -220,25 +373,31 @@ onUnmounted(() => {
   animation: pulse 2s infinite alternate;
 }
 
+/* 打字动画 */
+.typing .dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background-color: #00f3ff;
+  animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing .dot:nth-child(1) { animation-delay: -0.32s; }
+.typing .dot:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
 @keyframes popIn {
-  from {
-    opacity: 0;
-    transform: scale(0.8) translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-  }
+  from { opacity: 0; transform: scale(0.8) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
 
 @keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 0.4;
-  }
-  100% {
-    transform: scale(1.2);
-    opacity: 0.7;
-  }
+  0% { transform: scale(1); opacity: 0.4; }
+  100% { transform: scale(1.2); opacity: 0.7; }
 }
 </style>
