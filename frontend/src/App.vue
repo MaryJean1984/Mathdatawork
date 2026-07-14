@@ -22,12 +22,16 @@
     <main class="main-content fluid-container">
       <router-view></router-view>
     </main>
+
+    <!-- 全局 AI 助手 小词 -->
+    <AiAssistant v-if="isLoggedIn" />
   </div>
 </template>
 
 <script setup>
 import { computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import AiAssistant from './components/AiAssistant.vue'
 
 const router = useRouter()
 const route = useRoute()
