@@ -7,8 +7,8 @@
         </div>
       </template>
       <el-form :model="form" :rules="rules" ref="formRef" label-width="80px" class="glass-form" label-position="top">
-        <el-form-item label="USER ID / 昵称" prop="username">
-          <el-input v-model="form.username" placeholder="Enter your ID"></el-input>
+        <el-form-item label="PHONE / 电话" prop="phone">
+          <el-input v-model="form.phone" placeholder="Enter your phone number"></el-input>
         </el-form-item>
         <el-form-item label="PASSWORD / 密码" prop="password">
           <el-input v-model="form.password" type="password" placeholder="Enter your password"></el-input>
@@ -33,12 +33,15 @@ const isLogin = ref(true)
 const formRef = ref(null)
 
 const form = reactive({
-  username: '',
+  phone: '',
   password: ''
 })
 
 const rules = reactive({
-  username: [{ required: true, message: '请输入昵称', trigger: 'blur' }],
+  phone: [
+    { required: true, message: '请输入电话号码', trigger: 'blur' },
+    { pattern: /^\d{11}$/, message: '请输入有效的11位电话号码', trigger: 'blur' }
+  ],
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 })
 
