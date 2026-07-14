@@ -10,6 +10,13 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000
+    port: 3000,
+    proxy: {
+      '/ai-proxy': {
+        target: 'https://text.pollinations.ai',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ai-proxy/, '')
+      }
+    }
   }
 })

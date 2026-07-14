@@ -137,8 +137,8 @@ const sendMessage = async () => {
   try {
     const systemContext = `你现在的身份是一个名叫“小词”的AI英语学习助手，你的形象是一只可爱的蓝色画眉鸟。用户的昵称是“${getNickname()}”。请用活泼、鼓励、简短的语气回答用户的英语学习问题，或者进行日常对话。不要输出过长的长篇大论。请注意：在所有的回复中，绝对不要使用任何Emoji表情符号。`
     
-    // 使用 Pollinations AI 的 GET 接口，避免跨域或 Token 限制
-    const url = `https://text.pollinations.ai/${encodeURIComponent(text)}?system=${encodeURIComponent(systemContext)}`
+    // 使用 Vite 代理避免前端跨域及 Cloudflare 拦截问题
+    const url = `/ai-proxy/${encodeURIComponent(text)}?system=${encodeURIComponent(systemContext)}`
 
     const response = await fetch(url)
 
