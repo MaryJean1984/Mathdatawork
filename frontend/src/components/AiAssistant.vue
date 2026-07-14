@@ -3,7 +3,7 @@
     <!-- 聊天气泡 -->
     <div class="chat-bubble glass-card" v-if="isOpen">
       <div class="chat-header">
-        <span class="ai-name neon-text">小词 (Xiao Ci)</span>
+        <span class="ai-name neon-text">小词</span>
         <el-icon class="close-btn" @click="toggleChat"><Close /></el-icon>
       </div>
       <div class="chat-content">
@@ -33,8 +33,8 @@ import { Close } from '@element-plus/icons-vue'
 
 const isOpen = ref(false)
 
-// 使用 Trae 文档要求的图片生成规则生成卡通画眉鸟
-const avatarUrl = ref('https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=cute%20cartoon%20laughingthrush%20bird%20vector%20art%20avatar%20cyberpunk%20style&image_size=square')
+// 使用 Trae 文档要求的图片生成规则生成蓝色卡通画眉鸟
+const avatarUrl = ref('https://coresg-normal.trae.ai/api/ide/v1/text_to_image?prompt=cute%20blue%20cartoon%20laughingthrush%20bird%20vector%20art%20avatar%20cyberpunk%20style&image_size=square')
 
 // 获取用户信息和学习进度
 const getNickname = () => {
