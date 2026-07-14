@@ -12,7 +12,7 @@
           <div class="card-title neon-text">🎯 自律模式目标设置</div>
         </template>
         <div class="target-setting">
-          <p class="desc-text">设置您每日的背诵词汇目标，完成后将获得勋章奖励！</p>
+          <p class="desc-text">设置您每日的背诵词汇目标，完成后将获得勋章奖励！(每日限修改3次)</p>
           <div class="input-group">
             <el-input-number 
               v-model="targetInput" 
@@ -20,11 +20,14 @@
               :max="1000" 
               :step="10" 
               class="target-input" />
-            <el-button type="primary" @click="saveTarget">保存目标</el-button>
+            <el-button type="primary" class="glow-btn" @click="saveTarget">保存目标</el-button>
           </div>
           
           <div class="progress-section" v-if="dailyTarget > 0">
-            <p class="desc-text">今日进度：{{ wordsToday }} / {{ dailyTarget }}</p>
+            <div class="progress-header">
+              <p class="desc-text">今日进度：{{ wordsToday }} / {{ dailyTarget }}</p>
+              <el-button size="small" type="danger" plain @click="clearProgress" class="glass-btn">清空计数</el-button>
+            </div>
             <el-progress 
               :percentage="progressPercentage" 
               :status="progressPercentage >= 100 ? 'success' : ''" 
@@ -121,14 +124,41 @@ const loadData = () => {
 
 const saveTarget = () => {
   if (targetInput.value < 0) return
+
+  const today = new Date().toDateString()
+  let modifyRecord = JSON.parse(localStorage.getItem('targetModifyRecord') || '{}')
+  
+  if (modifyRecord.date !== today) {
+    modifyRecord.date = today
+    modifyRecord.count = 0
+  }
+  
+  if (modifyRecord.count >= 3) {
+    ElMessage.error('今日修改目标的次数已达上限（3次），请明日再试！')
+    targetInput.value = dailyTarget.value // 恢复为原目标值
+    return
+  }
+
   dailyTarget.value = targetInput.value
   localStorage.setItem('dailyTarget', dailyTarget.value.toString())
   
+  modifyRecord.count += 1
+  localStorage.setItem('targetModifyRecord', JSON.stringify(modifyRecord))
+  
   if (dailyTarget.value > 0) {
-    ElMessage.success(`自律模式已开启！今日目标：${dailyTarget.value} 词`)
+    ElMessage.success(`自律模式已开启！今日目标：${dailyTarget.value} 词 (今日还可修改 ${3 - modifyRecord.count} 次)`)
   } else {
-    ElMessage.warning('自律模式已关闭')
+    ElMessage.warning(`自律模式已关闭 (今日还可修改 ${3 - modifyRecord.count} 次)`)
   }
+}
+
+const clearProgress = () => {
+  const progress = JSON.parse(localStorage.getItem('studyProgress') || '{}')
+  progress.wordsToday = 0
+  // 不重置 targetMetToday 勋章已发，清空进度主要是为了能继续背或者重置错误
+  localStorage.setItem('studyProgress', JSON.stringify(progress))
+  wordsToday.value = 0
+  ElMessage.success('今日单词计数已清空！')
 }
 
 onMounted(() => {
@@ -187,6 +217,15 @@ onMounted(() => {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px dashed var(--glass-border);
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.progress-header .desc-text {
+  margin-bottom: 0;
 }
 .stats-grid {
   display: grid;
