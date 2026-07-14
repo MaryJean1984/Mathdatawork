@@ -137,30 +137,16 @@ const sendMessage = async () => {
   try {
     const systemContext = `你现在的身份是一个名叫“小词”的AI英语学习助手，你的形象是一只可爱的蓝色画眉鸟。用户的昵称是“${getNickname()}”。请用活泼、鼓励、简短的语气回答用户的英语学习问题，或者进行日常对话。不要输出过长的长篇大论。请注意：在所有的回复中，绝对不要使用任何Emoji表情符号。`
     
-    // 构建 OpenAI 格式的 messages
-    const apiMessages = [
-      { role: 'system', content: systemContext },
-      // 携带部分历史记录以保持上下文（这里简略处理，只传当前对话）
-      { role: 'user', content: text }
-    ]
+    // 使用 Pollinations AI 的 GET 接口，避免跨域或 Token 限制
+    const url = `https://text.pollinations.ai/${encodeURIComponent(text)}?system=${encodeURIComponent(systemContext)}`
 
-    const response = await fetch('https://text.pollinations.ai/openai', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messages: apiMessages,
-        model: 'openai', // 或保留默认
-      })
-    })
+    const response = await fetch(url)
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
     }
 
-    const data = await response.json()
-    const replyText = data.choices[0].message.content
+    const replyText = await response.text()
 
     messages.value.push({ role: 'assistant', text: replyText })
   } catch (error) {
