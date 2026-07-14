@@ -141,5 +141,52 @@ int main()
         return crow::response(res);
     });
 
+    // ==========================================
+    // 核心亮点 5：数据库层面的 AES 对称加密存储与解密查询
+    // ==========================================
+    CROW_ROUTE(app, "/api/user/register").methods(crow::HTTPMethod::Post)([](const crow::request& req){
+        auto body = crow::json::load(req.body);
+        if (!body) return crow::response(400, "Invalid JSON");
+
+        std::string username = body["username"].s();
+        std::string password = body["password"].s(); // 假设前端已做Hash或在此处做Hash
+        std::string phone = body.has("phone") ? std::string(body["phone"].s()) : std::string("");
+
+        // 使用 MySQL 内部的 AES_ENCRYPT 进行敏感数据（手机号）加密落库
+        // 这样即使数据库被拖库，黑客也无法直接看到明文手机号
+        std::string insertSQL = 
+            "INSERT INTO sys_user (username, password, phone) "
+            "VALUES ('" + username + "', '" + password + "', "
+            "AES_ENCRYPT('" + phone + "', 'MathDataWork_SecretKey_2026'));";
+
+        executeSQL(insertSQL);
+
+        crow::json::wvalue res;
+        res["status"] = "success";
+        res["message"] = "User registered with AES encrypted phone number.";
+        res["sql_executed"] = insertSQL;
+        return crow::response(res);
+    });
+
+    CROW_ROUTE(app, "/api/user/login").methods(crow::HTTPMethod::Post)([](const crow::request& req){
+        auto body = crow::json::load(req.body);
+        if (!body) return crow::response(400, "Invalid JSON");
+
+        std::string username = body["username"].s();
+
+        // 登录/查询时，利用 AES_DECRYPT 在数据库引擎层进行解密，并转换为 CHAR 类型返回
+        std::string querySQL = 
+            "SELECT id, username, CAST(AES_DECRYPT(phone, 'MathDataWork_SecretKey_2026') AS CHAR) AS phone_decrypted "
+            "FROM sys_user WHERE username = '" + username + "';";
+
+        executeSQL(querySQL);
+
+        crow::json::wvalue res;
+        res["status"] = "success";
+        res["message"] = "User info queried with AES decryption.";
+        res["sql_executed"] = querySQL;
+        return crow::response(res);
+    });
+
     app.port(8080).multithreaded().run();
 }
