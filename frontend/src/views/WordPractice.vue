@@ -350,10 +350,10 @@ const markAsUnknown = () => {
     ElMessage.info(`"${current.question.word}" 已在待背库中`)
   }
   
-  // 直接跳过到下一题
+  // 缩短延时，几乎立即跳到下一题
   setTimeout(() => {
     nextQuestion()
-  }, 800)
+  }, 300)
 }
 
 const markAsKnown = () => {
@@ -361,12 +361,12 @@ const markAsKnown = () => {
   if (!current || current.hasAnswered) return
   
   current.hasAnswered = true
-  ElMessage.success(`跳过 "${current.question.word}"，继续下一题`)
+  // 移除 Message 提示，实现无感静默跳过
   
-  // 直接跳过到下一题
+  // 直接跳过到下一题，极短延时或无延时
   setTimeout(() => {
     nextQuestion()
-  }, 500)
+  }, 100)
 }
 
 onMounted(() => {
